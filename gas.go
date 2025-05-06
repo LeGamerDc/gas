@@ -61,8 +61,9 @@ func (g *GAS[W, U, E]) AddRunning(w W, u U, r RunningI[W, U, E]) {
 		v.OnStack(a, b)
 		return
 	}
-	next := r.OnBegin(w, u)
-	g.Running.Push(r.Id(), r, next)
+	if next := r.OnBegin(w, u); next >= 0 {
+		g.Running.Push(r.Id(), r, next)
+	}
 }
 
 func (g *GAS[W, U, E]) refreshWatch() {

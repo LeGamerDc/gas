@@ -11,10 +11,6 @@ type (
 		Id() int32
 	}
 
-	header struct {
-		Id int32 `json:"id"`
-	}
-
 	Proxy[T any] struct {
 		ptr T
 	}
@@ -58,10 +54,10 @@ func (p *Proxy[T]) Get() T {
 }
 
 func (p *Proxy[T]) UnmarshalJSON(b []byte) (e error) {
-	var h header
-	if e = jsoniter.Unmarshal(b, &h); e != nil {
+	var x int32
+	if e = jsoniter.Unmarshal(b, &x); e != nil {
 		return
 	}
-	p.ptr = lookupPtr[T](h.Id)
+	p.ptr = lookupPtr[T](x)
 	return nil
 }

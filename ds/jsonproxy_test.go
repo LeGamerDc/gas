@@ -1,6 +1,7 @@
 package ds
 
 import (
+	"fmt"
 	"testing"
 
 	jsoniter "github.com/json-iterator/go"
@@ -62,10 +63,14 @@ func TestProxy(t *testing.T) {
 
 	RegisterProxy[mix](&b)
 	RegisterProxy[mix](&d)
-	e = jsoniter.Unmarshal([]byte(`{"x":13,"b":{"id":1},"d":{"id":3},"mix":{"id":3}}`), &a)
+	e = jsoniter.Unmarshal([]byte(`{"x":13,"b":1,"d":3,"mix":3}`), &a)
 	assert.Nil(t, e)
 
 	assert.Equal(t, b, *a.B.Get())
 	assert.Equal(t, d, *a.D.Get())
 	assert.Equal(t, mix(&d), a.Mix.Get())
+
+	fmt.Println(*a.B.Get())
+	fmt.Println(*a.D.Get())
+	fmt.Println(a.Mix.Get())
 }
