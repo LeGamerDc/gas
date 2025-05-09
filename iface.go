@@ -63,9 +63,9 @@ type (
 	// GAS game ability system: 一个单位身上的技能管理框架
 	// ArrayMap 和 HeapArrayMap 可以看做使用slice实现的map。在元素较少时，访问性能与map接近，但遍历效率大幅优于map。
 	GAS[W WI, U UI, E EI, T any] struct {
-		Abilities ds.ArrayMap[int32, AbilityI[W, U, E, T]]
-		Running   ds.HeapArrayMap[int32, int64, RunningI[W, U, E]]
-		Buff      ds.HeapArrayMap[BuffKind, int64, *BuffList]
+		Abilities ds.IndexMap[int32, AbilityI[W, U, E, T]]
+		Running   ds.HeapIndexMap[int32, int64, RunningI[W, U, E]]
+		Buff      ds.HeapIndexMap[BuffKind, int64, *BuffList]
 
 		// watchEvent TODO 后续使用count维护watch
 		watchEvent map[EventKind]struct{}

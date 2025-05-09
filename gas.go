@@ -6,9 +6,13 @@ import (
 )
 
 func NewGAS[W WI, U UI, E EI, T any]() *GAS[W, U, E, T] {
-	return &GAS[W, U, E, T]{
+	gas := &GAS[W, U, E, T]{
 		watchEvent: map[EventKind]struct{}{},
 	}
+	gas.Abilities.Init(4)
+	gas.Running.Init(4)
+	gas.Buff.Init(4)
+	return gas
 }
 
 func (g *GAS[W, U, E, T]) Think(w W, u U) int64 {
@@ -28,7 +32,6 @@ func (g *GAS[W, U, E, T]) Think(w W, u U) int64 {
 		} else {
 			v.OnEnd(w, u)
 			g.Running.Remove(i)
-			g.refreshWatch()
 		}
 	}
 	next = min(next, g.thinkBuff(now, u))
@@ -39,17 +42,15 @@ func (g *GAS[W, U, E, T]) OnEvent(w W, u U, e E) {
 	if _, ok := g.watchEvent[e.Kind()]; !ok {
 		return
 	}
-	g.Abilities.Iter(func(_ int32, a AbilityI[W, U, E, T]) (stop bool) {
+	g.Abilities.Iter(func(a AbilityI[W, U, E, T]) {
 		if slices.Contains(a.ListenEvent(), e.Kind()) {
 			a.OnEvent(w, u, e)
 		}
-		return false
 	})
-	g.Running.Iter(func(_ int32, v RunningI[W, U, E]) (stop bool) {
+	g.Running.Iter(func(v RunningI[W, U, E]) {
 		if slices.Contains(v.ListenEvent(), e.Kind()) {
 			v.OnEvent(w, u, e)
 		}
-		return false
 	})
 }
 
@@ -65,7 +66,7 @@ func (g *GAS[W, U, E, T]) AddAbility(w W, u U, a AbilityI[W, U, E, T]) bool {
 		return false
 	}
 	a.OnCreate(w, u)
-	g.Abilities.Push(a.Id(), a)
+	g.Abilities.Put(a.Id(), a)
 	for _, x := range a.ListenEvent() {
 		g.watchEvent[x] = struct{}{}
 	}
@@ -79,22 +80,14 @@ func (g *GAS[W, U, E, T]) AddRunning(w W, u U, r RunningI[W, U, E]) {
 		return
 	}
 	if next := r.OnBegin(w, u); next >= 0 {
-		g.Running.Push(r.Id(), r, next)
+		g.Running.Put(r.Id(), r, next)
 	}
 }
 
-func (g *GAS[W, U, E, T]) refreshWatch() {
-	clear(g.watchEvent)
-	g.Abilities.Iter(func(_ int32, a AbilityI[W, U, E, T]) (stop bool) {
-		for _, x := range a.ListenEvent() {
-			g.watchEvent[x] = struct{}{}
-		}
-		return false
-	})
-	g.Running.Iter(func(_ int32, v RunningI[W, U, E]) (stop bool) {
-		for _, x := range v.ListenEvent() {
-			g.watchEvent[x] = struct{}{}
-		}
-		return false
-	})
+func (g *GAS[W, U, E, T]) Watch(kind EventKind, id int32) {
+
+}
+
+func (g *GAS[W, U, E, T]) UnWatch(kind EventKind, id int32) {
+
 }
