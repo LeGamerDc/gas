@@ -83,7 +83,7 @@ func (b *BuffList) updateAdd(now int64, base float64) (v float64) {
 			n--
 		}
 	}
-	b.Nodes = b.Nodes[:n]
+	b.Nodes = b.Nodes[:n+1]
 	return base + v
 }
 
@@ -98,7 +98,7 @@ func (b *BuffList) updatePercent(now int64, base float64) (v float64) {
 			n--
 		}
 	}
-	b.Nodes = b.Nodes[:n]
+	b.Nodes = b.Nodes[:n+1]
 	return base * (1 + v)
 }
 
@@ -114,7 +114,7 @@ func (b *BuffList) updateMagnify(now int64, base float64) (v float64) {
 			n--
 		}
 	}
-	b.Nodes = b.Nodes[:n]
+	b.Nodes = b.Nodes[:n+1]
 	return base * v
 }
 

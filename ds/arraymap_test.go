@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const n = 50
+const n = 20
 
 func prepare(n int) iter.Seq2[int32, int32] {
 	s := make([]int32, n)
@@ -66,6 +66,24 @@ func BenchmarkMap_Get(b *testing.B) {
 	_, _ = x, y
 }
 
+func BenchmarkIndexMap_Get(b *testing.B) {
+	var (
+		m IndexMap[int32, int32]
+		x int
+		y int32
+	)
+	m.Init(n)
+	for k, v := range prepare(n) {
+		m.Put(k, v)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		k := int32(i % (n + 2))
+		x, y = m.Get(k)
+	}
+	_, _ = x, y
+}
+
 func BenchmarkArrayMap_Iter(b *testing.B) {
 	var (
 		m    ArrayMap[int32, int32]
@@ -97,6 +115,24 @@ func BenchmarkMap_Iter(b *testing.B) {
 		for k, v := range m {
 			x, y = k, v
 		}
+	}
+	_, _ = x, y
+}
+
+func BenchmarkIndexMap_Iter(b *testing.B) {
+	var (
+		m    IndexMap[int32, int32]
+		x, y int32
+	)
+	m.Init(n)
+	for k, v := range prepare(n) {
+		m.Put(k, v)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		m.Iter(func(v int32) {
+			y = v
+		})
 	}
 	_, _ = x, y
 }

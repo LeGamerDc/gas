@@ -13,7 +13,7 @@ type index[S cmp.Ordered] struct {
 type HeapArrayMap[K comparable, S cmp.Ordered, V any] struct {
 	nk []K
 	nv []V
-	np []int
+	np []int32
 
 	h []index[S]
 }
@@ -46,12 +46,12 @@ func (m *HeapArrayMap[K, S, V]) GetP(k K) (_ int, v *V) {
 func (m *HeapArrayMap[K, S, V]) Update(i int, s S) {
 	p := m.np[i]
 	m.h[p].sk = s
-	m.np[i] = m.fix(p)
+	m.np[i] = int32(m.fix(int(p)))
 }
 
 func (m *HeapArrayMap[K, S, V]) Remove(i int) {
 	var zero V
-	m.remove(m.np[i])
+	m.remove(int(m.np[i]))
 	n := len(m.nk) - 1
 	if n != i {
 		m.nk[i], m.nv[i], m.np[i], m.nv[n] = m.nk[n], m.nv[n], m.np[n], zero
@@ -62,22 +62,19 @@ func (m *HeapArrayMap[K, S, V]) Remove(i int) {
 
 // Push 设置kv到SortedMap中，为了更好的性能，Push不检查重复K
 func (m *HeapArrayMap[K, S, V]) Push(k K, v V, s S) {
+	n := len(m.nk)
 	m.nk = append(m.nk, k)
 	m.nv = append(m.nv, v)
-	n := len(m.np)
-	m.np = append(m.np, n)
-	m.push(index[S]{
-		i:  len(m.nk) - 1,
-		sk: s,
-	})
+	m.np = append(m.np, int32(n))
+	m.push(index[S]{i: n, sk: s})
 }
 
 func (m *HeapArrayMap[K, S, V]) Top() (i int, k K, v V, s S) {
-	return m.h[0].i, m.nk[m.h[0].i], m.nv[m.h[0].i], m.h[0].sk
+	return int(m.h[0].i), m.nk[m.h[0].i], m.nv[m.h[0].i], m.h[0].sk
 }
 
 func (m *HeapArrayMap[K, S, V]) Pop() {
-	m.Remove(m.h[0].i)
+	m.Remove(int(m.h[0].i))
 }
 
 func (m *HeapArrayMap[K, S, V]) Size() int {
@@ -98,7 +95,7 @@ func (m *HeapArrayMap[K, S, V]) up(j int) int {
 		if i == j || m.h[i].sk <= m.h[j].sk {
 			break
 		}
-		m.np[m.h[i].i], m.np[m.h[j].i] = j, i
+		m.np[m.h[i].i], m.np[m.h[j].i] = int32(j), int32(i)
 		m.h[i], m.h[j] = m.h[j], m.h[i]
 		j = i
 	}
@@ -120,7 +117,7 @@ func (m *HeapArrayMap[K, S, V]) down(i0 int, n int) int {
 		if m.h[i].sk <= m.h[j].sk {
 			break
 		}
-		m.np[m.h[i].i], m.np[m.h[j].i] = j, i
+		m.np[m.h[i].i], m.np[m.h[j].i] = int32(j), int32(i)
 		m.h[i], m.h[j] = m.h[j], m.h[i]
 		i = j
 	}
@@ -151,7 +148,7 @@ func (m *HeapArrayMap[K, S, V]) pop() (x index[S]) {
 func (m *HeapArrayMap[K, S, V]) remove(i int) {
 	n := len(m.h) - 1
 	if n != i {
-		m.np[m.h[n].i] = i
+		m.np[m.h[n].i] = int32(i)
 		m.h[i], m.h[n] = m.h[n], m.h[i]
 		if ni := m.down(i, n); ni == i {
 			m.up(i)
