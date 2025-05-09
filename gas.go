@@ -1,8 +1,17 @@
 package gas
 
-import "slices"
+import (
+	"errors"
+	"slices"
+)
 
-func (g *GAS[W, U, E]) Think(w W, u U) int64 {
+func NewGAS[W WI, U UI, E EI, T any]() *GAS[W, U, E, T] {
+	return &GAS[W, U, E, T]{
+		watchEvent: map[EventKind]struct{}{},
+	}
+}
+
+func (g *GAS[W, U, E, T]) Think(w W, u U) int64 {
 	var (
 		now  = w.Now()
 		next = now + ThinkLater
@@ -19,17 +28,18 @@ func (g *GAS[W, U, E]) Think(w W, u U) int64 {
 		} else {
 			v.OnEnd(w, u)
 			g.Running.Remove(i)
+			g.refreshWatch()
 		}
 	}
 	next = min(next, g.thinkBuff(now, u))
 	return next
 }
 
-func (g *GAS[W, U, E]) OnEvent(w W, u U, e E) {
+func (g *GAS[W, U, E, T]) OnEvent(w W, u U, e E) {
 	if _, ok := g.watchEvent[e.Kind()]; !ok {
 		return
 	}
-	g.Abilities.Iter(func(_ int32, a AbilityI[W, U, E]) (stop bool) {
+	g.Abilities.Iter(func(_ int32, a AbilityI[W, U, E, T]) (stop bool) {
 		if slices.Contains(a.ListenEvent(), e.Kind()) {
 			a.OnEvent(w, u, e)
 		}
@@ -43,7 +53,14 @@ func (g *GAS[W, U, E]) OnEvent(w W, u U, e E) {
 	})
 }
 
-func (g *GAS[W, U, E]) AddAbility(w W, u U, a AbilityI[W, U, E]) bool {
+func (g *GAS[W, U, E, T]) Cast(w W, u U, t T, id int32) error {
+	if i, v := g.Abilities.Get(id); i >= 0 {
+		return v.Cast(w, u, t)
+	}
+	return errors.New("ability not found")
+}
+
+func (g *GAS[W, U, E, T]) AddAbility(w W, u U, a AbilityI[W, U, E, T]) bool {
 	if i, _ := g.Abilities.Get(a.Id()); i >= 0 {
 		return false
 	}
@@ -55,7 +72,7 @@ func (g *GAS[W, U, E]) AddAbility(w W, u U, a AbilityI[W, U, E]) bool {
 	return true
 }
 
-func (g *GAS[W, U, E]) AddRunning(w W, u U, r RunningI[W, U, E]) {
+func (g *GAS[W, U, E, T]) AddRunning(w W, u U, r RunningI[W, U, E]) {
 	if i, v := g.Running.Get(r.Id()); i >= 0 {
 		a, b := r.Stack()
 		v.OnStack(a, b)
@@ -66,9 +83,9 @@ func (g *GAS[W, U, E]) AddRunning(w W, u U, r RunningI[W, U, E]) {
 	}
 }
 
-func (g *GAS[W, U, E]) refreshWatch() {
+func (g *GAS[W, U, E, T]) refreshWatch() {
 	clear(g.watchEvent)
-	g.Abilities.Iter(func(_ int32, a AbilityI[W, U, E]) (stop bool) {
+	g.Abilities.Iter(func(_ int32, a AbilityI[W, U, E, T]) (stop bool) {
 		for _, x := range a.ListenEvent() {
 			g.watchEvent[x] = struct{}{}
 		}

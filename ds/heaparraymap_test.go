@@ -2,9 +2,10 @@ package ds
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"math/rand/v2"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHeapMapRemove(t *testing.T) {

@@ -128,7 +128,7 @@ func (b *BuffList) next() int64 {
 	return x
 }
 
-func (g *GAS[W, U, E]) calculateBuff(now int64, v *BuffList, u U) {
+func (g *GAS[W, U, E, T]) calculateBuff(now int64, v *BuffList, u U) {
 	base := u.GetBuffBase(v.kind)
 	newV := base
 	switch v.compose {
@@ -145,7 +145,7 @@ func (g *GAS[W, U, E]) calculateBuff(now int64, v *BuffList, u U) {
 	u.SetBuff(v.kind, newV)
 }
 
-func (g *GAS[W, U, E]) thinkBuff(now int64, u U) int64 {
+func (g *GAS[W, U, E, T]) thinkBuff(now int64, u U) int64 {
 	for g.Buff.Size() > 0 {
 		i, _, v, when := g.Buff.Top()
 		if when > now {
@@ -161,7 +161,7 @@ func (g *GAS[W, U, E]) thinkBuff(now int64, u U) int64 {
 	return now + ThinkLater
 }
 
-func (g *GAS[W, U, E]) AddBuff(w W, u U, b BuffNode) {
+func (g *GAS[W, U, E, T]) AddBuff(w W, u U, b BuffNode) {
 	i, v := g.Buff.Get(b.Kind)
 	if i >= 0 {
 		next := v.mergeBuff(b)

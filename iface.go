@@ -37,11 +37,12 @@ type (
 	}
 
 	// AbilityI 技能抽象，玩家拥有的技能，开发者可以在OnEvent实现中去管理cd、判断时机和影响世界。
-	AbilityI[W WI, U UI, E EI] interface {
+	AbilityI[W WI, U UI, E EI, T any] interface {
 		Id() int32
 		ListenEvent() []EventKind
 		OnCreate(W, U)
 		OnEvent(W, U, E)
+		Cast(W, U, T) error
 	}
 
 	// RunningI 运行时实体，主要包括3种接口
@@ -61,8 +62,8 @@ type (
 
 	// GAS game ability system: 一个单位身上的技能管理框架
 	// ArrayMap 和 HeapArrayMap 可以看做使用slice实现的map。在元素较少时，访问性能与map接近，但遍历效率大幅优于map。
-	GAS[W WI, U UI, E EI] struct {
-		Abilities ds.ArrayMap[int32, AbilityI[W, U, E]]
+	GAS[W WI, U UI, E EI, T any] struct {
+		Abilities ds.ArrayMap[int32, AbilityI[W, U, E, T]]
 		Running   ds.HeapArrayMap[int32, int64, RunningI[W, U, E]]
 		Buff      ds.HeapArrayMap[BuffKind, int64, *BuffList]
 

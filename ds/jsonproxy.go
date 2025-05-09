@@ -28,8 +28,8 @@ var _manager = proxyManager{mms: make(map[reflect.Type]*mm)}
 
 func RegisterProxy[T id](p T) {
 	var (
-		zero T
-		tp   = reflect.TypeOf(zero)
+		zero [0]T
+		tp   = reflect.TypeOf(zero).Elem()
 	)
 
 	if m, ok := _manager.mms[tp]; ok {
@@ -41,8 +41,11 @@ func RegisterProxy[T id](p T) {
 	}}
 }
 
-func lookupPtr[T any](id int32) (p T) {
-	var tp = reflect.TypeOf(p)
+func LookupPtr[T any](id int32) (p T) {
+	var (
+		zero [0]T
+		tp   = reflect.TypeOf(zero).Elem()
+	)
 	if m, ok := _manager.mms[tp]; ok {
 		p = m.m[id].(T)
 	}
@@ -58,6 +61,6 @@ func (p *Proxy[T]) UnmarshalJSON(b []byte) (e error) {
 	if e = jsoniter.Unmarshal(b, &x); e != nil {
 		return
 	}
-	p.ptr = lookupPtr[T](x)
+	p.ptr = LookupPtr[T](x)
 	return nil
 }
